@@ -1,0 +1,18 @@
+server:
+  port: 8765
+spring:
+  application:
+    name: fix-client
+
+quickfix:
+  client:
+    config-file: ntpro-adapter-client.cfg
+
+fix.sessions:
+  - client-id: Z65724
+    sender: sender-Z65724-md
+    target: target-Z65724-md
+
+logging:
+  pattern:
+    console: "%clr(%d){faint} %clr(${LOG_LEVEL_PATTERN:%5p}) %clr([%t]){faint} %clr(%logger{39}){cyan} --- %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:%wEx}"
