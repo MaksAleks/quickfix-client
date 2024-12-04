@@ -28,7 +28,7 @@ public class MarketDataSnapshotConverter {
         var particles = new ArrayList<MarketDataParticle>(entriesNumber);
         var prices = new HashMap<Long, EnumMap<TradeSide, MarketPrice>>();
         for (int i = 0; i < entriesNumber; i++) {
-            var entry = toMarketDataEntry(marketDataSnapshot, i);
+            var entry = toMarketDataEntry(marketDataSnapshot, i + 1);
             prices.computeIfAbsent(entry.size(), size -> new EnumMap<>(TradeSide.class))
                     .put(entry.side(), MarketPrice.ZERO.equals(entry.price()) ? null : entry.price());
         }

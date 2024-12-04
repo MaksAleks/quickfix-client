@@ -3,7 +3,6 @@ package ru.raiffeisen.quickfix.client.domain.subscription.md;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import quickfix.StringField;
 import quickfix.field.MDReqID;
 import quickfix.field.MDUpdateType;
 import quickfix.field.MarketDepth;

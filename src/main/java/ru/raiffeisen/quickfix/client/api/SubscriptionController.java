@@ -27,9 +27,9 @@ public class SubscriptionController {
     private final MdSubscriptionService service;
 
     @PostMapping(value = "/md", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public void subscribeMd(@RequestBody MdSubscription subscription) {
+    public SseEmitter subscribeMd(@RequestBody MdSubscription subscription) {
         log.info("Subscribing to mds {}", subscription);
-        sse.computeIfAbsent(subscription.id(), k -> {
+        return sse.computeIfAbsent(subscription.id(), k -> {
             var emitter = new SseEmitter();
             service.subscribe(subscription, new MdsConsumerImpl(emitter));
             return emitter;
@@ -44,6 +44,7 @@ public class SubscriptionController {
         @Override
         public void onSnapshot(MarketDataSnapshot mds) {
             try {
+                log.info("Received MarketDataSnapshot {}", mds);
                 emitter.send(mds);
             } catch (IOException e) {
                 log.error("Error while emitting sse", e);

@@ -1,18 +1,16 @@
 package ru.raiffeisen.quickfix.client.domain.subscription.md;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NonNull;
-import lombok.experimental.Accessors;
 
 import java.security.SecureRandom;
 import java.util.Comparator;
 import java.util.List;
 
 @Data
-@Accessors(chain = true, fluent = true)
-public final class MarketDataSnapshot {
+public class MarketDataSnapshot {
 
-    @NonNull
     private List<MarketDataParticle> particles;
 
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -21,8 +19,10 @@ public final class MarketDataSnapshot {
 
     public MarketDataSnapshot(@NonNull List<MarketDataParticle> particles) {
         particles.sort(COMPARATOR);
+        this.particles = particles;
     }
 
+    @JsonIgnore
     public boolean isEmpty() {
         return particles.isEmpty();
     }
