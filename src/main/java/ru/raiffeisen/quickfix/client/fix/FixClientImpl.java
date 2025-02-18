@@ -1,58 +1,33 @@
 package ru.raiffeisen.quickfix.client.fix;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Service;
-import quickfix.ConfigError;
-import quickfix.FileStoreFactory;
-import quickfix.LogFactory;
-import quickfix.MessageFactory;
-import quickfix.ScreenLogFactory;
-import quickfix.Session;
-import quickfix.SessionID;
-import quickfix.SessionNotFound;
-import quickfix.SocketInitiator;
 import quickfix.fix44.Message;
 
-@Slf4j
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 @Service
-public class FixClientImpl implements FixClient, DisposableBean {
+public class FixClientImpl implements FixClient {
 
-    private final SocketInitiator initiator;
+    private final Map<String, FixInitiator> initiators;
 
-    public FixClientImpl(Settings settings,
-                         MessageFactory messageFactory,
-                         InitiatorSessionListener listener) {
-        try {
-            FileStoreFactory storeFactory = new FileStoreFactory(settings.getSessionSettings());
-            LogFactory logFactory = new ScreenLogFactory(settings.getSessionSettings());
-            this.initiator = new SocketInitiator(
-                    listener, storeFactory, settings.getSessionSettings(),
-                    logFactory, messageFactory);
-        } catch (ConfigError e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    void start() {
-        try {
-            initiator.start();
-        } catch (ConfigError e) {
-            throw new RuntimeException(e);
-        }
+    public FixClientImpl(List<FixInitiator> initiators) {
+        this.initiators = initiators.stream()
+                .collect(Collectors.toMap(FixInitiator::clientId, Function.identity()));
     }
 
     @Override
-    public void destroy() {
-        initiator.stop();
+    public void send(Message message, String clientId) {
+        var initiator = getInitiator(clientId);
+        initiator.send(message);
     }
 
-    @Override
-    public void send(Message message, SessionID sessionId) {
-        try {
-            Session.sendToTarget(message, sessionId);
-        } catch (SessionNotFound e) {
-            throw new RuntimeException(e);
+    private FixInitiator getInitiator(String clientId) {
+        if (!initiators.containsKey(clientId)) {
+            throw new IllegalArgumentException("Initiator session not found: " + clientId);
         }
+        return initiators.get(clientId);
     }
 }

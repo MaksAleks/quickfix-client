@@ -4,14 +4,14 @@ spring:
   application:
     name: fix-client
 
-quickfix:
+fix:
   client:
     config-file: ntpro-adapter-client.cfg
-
-fix.sessions:
-  - client-id: Z65724
-    sender: sender-Z65724-md
-    target: target-Z65724-md
+    sessions:
+      - client-id: Z65724
+        sender: sender-Z65724-md
+        target: target-Z65724-md
+        password: pwd
 
 logging:
   pattern:

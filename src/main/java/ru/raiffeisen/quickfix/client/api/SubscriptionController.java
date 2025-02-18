@@ -2,11 +2,14 @@ package ru.raiffeisen.quickfix.client.api;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.mutable.MutableObject;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import ru.raiffeisen.quickfix.client.domain.subscription.md.MarketDataSnapshot;
 import ru.raiffeisen.quickfix.client.domain.subscription.md.MdSubscription;
@@ -23,17 +26,29 @@ import java.util.concurrent.ConcurrentMap;
 @RequiredArgsConstructor
 public class SubscriptionController {
 
-    private final ConcurrentMap<String, SseEmitter> sse = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, MdsConsumerImpl> sse = new ConcurrentHashMap<>();
     private final MdSubscriptionService service;
 
     @PostMapping(value = "/md", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribeMd(@RequestBody MdSubscription subscription) {
         log.info("Subscribing to mds {}", subscription);
-        return sse.computeIfAbsent(subscription.id(), k -> {
+        return subscribe(subscription);
+    }
+
+    private SseEmitter subscribe(MdSubscription subscription) {
+        var holder = new MutableObject<MdsConsumerImpl>();
+        sse.computeIfAbsent(subscription.id(), k -> {
             var emitter = new SseEmitter();
-            service.subscribe(subscription, new MdsConsumerImpl(emitter));
-            return emitter;
+            var consumer = new MdsConsumerImpl(emitter);
+            holder.setValue(consumer);
+            return consumer;
         });
+        var consumer = holder.getValue();
+        if (consumer == null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Subscription already exists");
+        }
+        service.subscribe(subscription, consumer);
+        return consumer.emitter;
     }
 
     @RequiredArgsConstructor

@@ -10,9 +10,7 @@ import quickfix.field.SubscriptionRequestType;
 import quickfix.field.Symbol;
 import quickfix.fix44.MarketDataRequest;
 import quickfix.fix44.component.Instrument;
-import ru.raiffeisen.quickfix.client.fix.ClientSessions;
 import ru.raiffeisen.quickfix.client.fix.FixClient;
-import ru.raiffeisen.quickfix.client.fix.FixSessionMapper;
 
 @Slf4j
 @Service
@@ -21,15 +19,11 @@ public class MdSubscriptionServiceImpl implements MdSubscriptionService {
 
     private final MdSubscriptionRegistry registry;
     private final FixClient fixClient;
-    private final FixSessionMapper fixSessionMapper;
-    private final ClientSessions clientSessions;
 
     @Override
     public void subscribe(MdSubscription subscription, MdsConsumer consumer) {
-        var fixSession = clientSessions.getSession(subscription.client());
-        var sessionId = fixSessionMapper.getSessionId(fixSession);
         registry.registerSubscription(new MdSubscriptionRegistry.MdSubscriptionDescriptor(subscription, consumer));
-        fixClient.send(toRequest(subscription), sessionId);
+        fixClient.send(toRequest(subscription), subscription.client());
     }
 
     private MarketDataRequest toRequest(MdSubscription subscription) {

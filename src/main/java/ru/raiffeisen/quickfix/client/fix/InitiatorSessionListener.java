@@ -16,12 +16,10 @@ import ru.raiffeisen.quickfix.client.domain.subscription.md.MdSubscriptionListen
 public class InitiatorSessionListener implements Application {
 
     private final MdSubscriptionListener mdsListener;
-    private final FixSessionMapper sessionMapper;
 
     @Override
     public void onCreate(SessionID sessionId) {
         log.info("InitiatorSessionListener onCreate " + sessionId);
-        sessionMapper.register(new FixSessionId(sessionId.getSenderCompID(), sessionId.getTargetCompID()), sessionId);
     }
 
     @Override
